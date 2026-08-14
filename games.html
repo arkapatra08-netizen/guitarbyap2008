@@ -1,0 +1,357 @@
+<div style="text-align:center; margin-top:40px"><img src="LOGO.jpg"></div>
+<h1 style="font-size:50px; text-align:center">LEARN AND PLAY</h1>
+
+<div style="font-size:20px; text-align:center; margin-top:40px">
+<a style="padding-right:20px" href="index.html">Index</a>
+<a style="padding-right:20px" href="about.html">About</a>
+<a style="padding-right:20px" href="tools.html">Tools</a></div>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Guitar Fretboard</title>
+    <style>
+        :root {
+            --wood-color: #3d2314;
+            --fret-color: #c0c0c0;
+            --string-color: #e0e0e0;
+            --note-color: #ff4757;
+            --highlight-color: #2ed573;
+            --quiz-color: #1e90ff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f1f2f6;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h2 {
+            color: #2f3542;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #747d8c;
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            background: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            color: white;
+            background-color: #747d8c;
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        #scale-btn.active {
+            background-color: var(--highlight-color);
+        }
+
+        #quiz-btn {
+            background-color: var(--quiz-color);
+        }
+
+        #quiz-btn.active {
+            background-color: #ff4757;
+        }
+
+        #quiz-prompt {
+            font-size: 16px;
+            font-weight: bold;
+            color: #2f3542;
+            min-width: 150px;
+        }
+
+        .fretboard {
+            display: grid;
+            grid-template-rows: repeat(6, 45px);
+            background-color: var(--wood-color);
+            border: 4px solid #2d1a0e;
+            border-radius: 6px;
+            width: 100%;
+            max-width: 850px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+        }
+
+        .string {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            align-items: center;
+            position: relative;
+        }
+
+        .string::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            height: 2px;
+            background-color: var(--string-color);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Thicker lines for lower strings */
+        .string:nth-child(4)::after { height: 2.5px; }
+        .string:nth-child(5)::after { height: 3px; }
+        .string:nth-child(6)::after { height: 3.5px; }
+
+        .note {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            border-right: 3px solid var(--fret-color);
+            position: relative;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        /* Open notes (first column) don't have fret wires on the left */
+        .note[data-fret="0"] {
+            border-right: 3px solid var(--fret-color);
+}
+
+        .note::before {
+            content: attr(data-note);
+            position: absolute;
+            background-color: var(--note-color);
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.15s ease, transform 0.15s ease;
+            transform: scale(0.5);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* Hover behavior */
+        .note:hover::before {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Scale highlight state */
+        .note.scale-highlight::before {
+            opacity: 1;
+            transform: scale(1);
+            background-color: var(--highlight-color);
+        }
+
+        /* Quiz active reveal state */
+        .note.quiz-correct::before {
+            opacity: 1;
+            transform: scale(1);
+            background-color: var(--quiz-color);
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Interactive Guitar Fretboard</h2>
+    <p class="subtitle">Hover to explore notes, click to play sound, or use the toolbox below!</p>
+    
+    <div class="controls">
+        <button id="scale-btn" onclick="toggleScale()">Show C Major Scale</button>
+        <button id="quiz-btn" onclick="toggleQuiz()">Start Note Quiz</button>
+        <div id="quiz-prompt"></div>
+    </div>
+
+    <div class="fretboard">
+        <!-- High E String -->
+        <div class="string" data-base-freq="329.63">
+            <div class="note" data-note="E" data-fret="0"></div>
+            <div class="note" data-note="F" data-fret="1"></div>
+            <div class="note" data-note="F#" data-fret="2"></div>
+            <div class="note" data-note="G" data-fret="3"></div>
+            <div class="note" data-note="G#" data-fret="4"></div>
+        </div>
+        <!-- B String -->
+        <div class="string" data-base-freq="246.94">
+            <div class="note" data-note="B" data-fret="0"></div>
+            <div class="note" data-note="C" data-fret="1"></div>
+            <div class="note" data-note="C#" data-fret="2"></div>
+            <div class="note" data-note="D" data-fret="3"></div>
+            <div class="note" data-note="D#" data-fret="4"></div>
+        </div>
+        <!-- G String -->
+        <div class="string" data-base-freq="196.00">
+            <div class="note" data-note="G" data-fret="0"></div>
+            <div class="note" data-note="G#" data-fret="1"></div>
+            <div class="note" data-note="A" data-fret="2"></div>
+            <div class="note" data-note="A#" data-fret="3"></div>
+            <div class="note" data-note="B" data-fret="4"></div>
+        </div>
+        <!-- D String -->
+        <div class="string" data-base-freq="146.83">
+            <div class="note" data-note="D" data-fret="0"></div>
+            <div class="note" data-note="D#" data-fret="1"></div>
+            <div class="note" data-note="E" data-fret="2"></div>
+            <div class="note" data-note="F" data-fret="3"></div>
+            <div class="note" data-note="F#" data-fret="4"></div>
+        </div>
+        <!-- A String -->
+        <div class="string" data-base-freq="110.00">
+            <div class="note" data-note="A" data-fret="0"></div>
+            <div class="note" data-note="A#" data-fret="1"></div>
+            <div class="note" data-note="B" data-fret="2"></div>
+            <div class="note" data-note="C" data-fret="3"></div>
+            <div class="note" data-note="C#" data-fret="4"></div>
+        </div>
+        <!-- Low E String -->
+        <div class="string" data-base-freq="82.41">
+            <div class="note" data-note="E" data-fret="0"></div>
+            <div class="note" data-note="F" data-fret="1"></div>
+            <div class="note" data-note="F#" data-fret="2"></div>
+            <div class="note" data-note="G" data-fret="3"></div>
+            <div class="note" data-note="G#" data-fret="4"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. WEB AUDIO API SYNTH SETUP ---
+        let audioCtx = null;
+
+        function playSound(baseFrequency, fretNumber) {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            const actualFrequency = baseFrequency * Math.pow(2, fretNumber / 12);
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            oscillator.type = 'triangle';
+            oscillator.frequency.value = actualFrequency;
+
+            const now = audioCtx.currentTime;
+            gainNode.gain.setValueAtTime(0, now);
+            gainNode.gain.linearRampToValueAtTime(0.6, now + 0.02);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, now + 1.0);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            oscillator.start(now);
+            oscillator.stop(now + 1.0);
+        }
+
+        // --- 2. C MAJOR SCALE HIGHLIGHTER ---
+        const cMajorNotes = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+        let isScaleActive = false;
+
+        function toggleScale() {
+            isScaleActive = !isScaleActive;
+            const button = document.getElementById('scale-btn');
+            const allNotes = document.querySelectorAll('.note');
+
+            if (isScaleActive) {
+                button.classList.add('active');
+                button.innerText = "Hide C Major Scale";
+                allNotes.forEach(note => {
+                    const currentNoteName = note.getAttribute('data-note');
+                    if (cMajorNotes.includes(currentNoteName)) {
+                        note.classList.add('scale-highlight');
+                    }
+                });
+            } else {
+                button.classList.remove('active');
+                button.innerText = "Show C Major Scale";
+                allNotes.forEach(note => {
+                    note.classList.remove('scale-highlight');
+                });
+            }
+        }
+
+        // --- 3. RANDOM NOTE MEMORY QUIZ ---
+        const availableNotes = ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#'];
+        let isQuizActive = false;
+        let currentTargetNote = '';
+
+        function toggleQuiz() {
+            isQuizActive = !isQuizActive;
+            const button = document.getElementById('quiz-btn');
+            const prompt = document.getElementById('quiz-prompt');
+
+            if (isQuizActive) {
+                button.classList.add('active');
+                button.innerText = "Stop Quiz";
+                generateNewQuizQuestion();
+            } else {
+                button.classList.remove('active');
+                button.innerText = "Start Note Quiz";
+                prompt.innerText = '';
+                currentTargetNote = '';
+            }
+        }
+
+        function generateNewQuizQuestion() {
+            const randomIndex = Math.floor(Math.random() * availableNotes.length);
+            currentTargetNote = availableNotes[randomIndex];
+            document.getElementById('quiz-prompt').innerText = `🎯 Target: ${currentTargetNote}`;
+        }
+
+        // --- 4. CLICK HANDLERS LINKING HTML TO SCRIPTS ---
+        document.querySelectorAll('.note').forEach(noteElement => {
+            noteElement.addEventListener('click', () => {
+                const noteName = noteElement.getAttribute('data-note');
+                const fretNumber = parseInt(noteElement.getAttribute('data-fret'), 10);
+                const stringBaseFreq = parseFloat(noteElement.parentElement.getAttribute('data-base-freq'));
+
+                playSound(stringBaseFreq, fretNumber);
+
+                if (isQuizActive) {
+                    if (noteName === currentTargetNote) {
+                        noteElement.classList.add('quiz-correct');
+                        
+                        setTimeout(() => {
+                            alert(`Awesome! You found ${currentTargetNote} 🎉`);
+                            noteElement.classList.remove('quiz-correct');
+                            generateNewQuizQuestion();
+                        }, 100);
+                    } else {
+                        alert(`Not quite! That was ${noteName}. Keep looking for ${currentTargetNote}! 💪`);
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
